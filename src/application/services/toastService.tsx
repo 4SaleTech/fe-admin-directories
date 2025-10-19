@@ -76,10 +76,14 @@ export const toastService = {
    * Shows a toast with confirm/cancel buttons
    */
   confirm: (
-    message: string,
-    onConfirm: () => void | Promise<void>,
+    messageOrOptions: string | { message: string; onConfirm: () => void | Promise<void>; onCancel?: () => void },
+    onConfirm?: () => void | Promise<void>,
     onCancel?: () => void
   ) => {
+    // Support both object and separate arguments
+    const message = typeof messageOrOptions === 'string' ? messageOrOptions : messageOrOptions.message;
+    const confirmFn = typeof messageOrOptions === 'string' ? onConfirm! : messageOrOptions.onConfirm;
+    const cancelFn = typeof messageOrOptions === 'string' ? onCancel : messageOrOptions.onCancel;
     const id = toast(
       (t) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -88,7 +92,7 @@ export const toastService = {
             <button
               onClick={() => {
                 toast.dismiss(t.id);
-                if (onCancel) onCancel();
+                if (cancelFn) cancelFn();
               }}
               style={{
                 padding: '6px 12px',
@@ -106,7 +110,7 @@ export const toastService = {
               onClick={async () => {
                 toast.dismiss(t.id);
                 try {
-                  await onConfirm();
+                  await confirmFn();
                 } catch (error) {
                   // Error will be handled by the calling code
                 }

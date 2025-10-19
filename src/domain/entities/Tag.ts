@@ -15,7 +15,9 @@ export interface Tag {
 export interface TagCreateRequest {
   name: string;
   name_ar?: string;
-  slug: string;
+  slug?: string;
+  icon?: string;
+  display_order?: number;
 }
 
 export interface TagUpdateRequest {

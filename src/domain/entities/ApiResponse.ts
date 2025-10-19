@@ -4,6 +4,12 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   errors?: Record<string, string>;
+  pagination?: {
+    page: number;
+    limit: number;
+    total_count: number;
+    total_pages: number;
+  };
 }
 
 export interface PaginatedResponse<T = any> {

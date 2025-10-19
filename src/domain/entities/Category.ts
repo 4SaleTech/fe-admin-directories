@@ -16,7 +16,7 @@ export interface Category {
 
 export interface CategoryCreateRequest {
   name: string;
-  slug: string;
+  slug?: string;
   name_ar?: string;
   description?: string;
   description_ar?: string;
