@@ -10,6 +10,15 @@ export interface Category {
   is_active: boolean;
   display_order: number;
   businesses_count?: number;
+  page_title?: string;
+  page_description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  page_title_ar?: string;
+  page_description_ar?: string;
+  meta_title_ar?: string;
+  meta_description_ar?: string;
+  og_image?: string;
   created_at: string;
   updated_at: string;
 }
@@ -31,4 +40,13 @@ export interface CategoryUpdateRequest {
   description_ar?: string;
   icon?: string;
   display_order?: number;
+  page_title?: string;
+  page_description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  page_title_ar?: string;
+  page_description_ar?: string;
+  meta_title_ar?: string;
+  meta_description_ar?: string;
+  og_image?: string;
 }

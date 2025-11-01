@@ -7,6 +7,7 @@ import LoadingSpinner from '@/presentation/components/LoadingSpinner/LoadingSpin
 import Pagination from '@/presentation/components/Pagination/Pagination';
 import BulkActionsToolbar from '@/presentation/components/BulkActionsToolbar/BulkActionsToolbar';
 import IconPicker from '@/presentation/components/IconPicker/IconPicker';
+import SEOFields from '@/presentation/components/SEOFields/SEOFields';
 import { useBulkSelection } from '@/application/hooks/useBulkSelection';
 import { businessAdminRepository } from '@/infrastructure/repositories/BusinessAdminRepository';
 import { categoryAdminRepository } from '@/infrastructure/repositories/CategoryAdminRepository';
@@ -71,6 +72,19 @@ export default function BusinessesPage() {
     logo: '',
     tag_ids: [] as number[],
     filter_values: {} as Record<string, string>,
+    page_title: '',
+    page_description: '',
+    meta_title: '',
+    meta_description: '',
+    page_title_ar: '',
+    page_description_ar: '',
+    meta_title_ar: '',
+    meta_description_ar: '',
+    og_title: '',
+    og_description: '',
+    og_title_ar: '',
+    og_description_ar: '',
+    og_image: '',
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -191,6 +205,19 @@ export default function BusinessesPage() {
       logo: '',
       tag_ids: [],
       filter_values: {},
+      page_title: '',
+      page_description: '',
+      meta_title: '',
+      meta_description: '',
+      page_title_ar: '',
+      page_description_ar: '',
+      meta_title_ar: '',
+      meta_description_ar: '',
+      og_title: '',
+      og_description: '',
+      og_title_ar: '',
+      og_description_ar: '',
+      og_image: '',
     });
     setCategoryFilters([]);
     setShowModal(true);
@@ -219,6 +246,19 @@ export default function BusinessesPage() {
       logo: business.logo || '',
       tag_ids: business.tags?.map(tag => tag.id) || [],
       filter_values: business.attributes || {},
+      page_title: business.page_title || '',
+      page_description: business.page_description || '',
+      meta_title: business.meta_title || '',
+      meta_description: business.meta_description || '',
+      page_title_ar: business.page_title_ar || '',
+      page_description_ar: business.page_description_ar || '',
+      meta_title_ar: business.meta_title_ar || '',
+      meta_description_ar: business.meta_description_ar || '',
+      og_title: business.og_title || '',
+      og_description: business.og_description || '',
+      og_title_ar: business.og_title_ar || '',
+      og_description_ar: business.og_description_ar || '',
+      og_image: business.og_image || '',
     });
     setShowModal(true);
     // Load filters for this business's category
@@ -860,6 +900,24 @@ export default function BusinessesPage() {
                     onChange={(e) => setFormData({ ...formData, address_ar: e.target.value })}
                   />
                 </div>
+
+                <SEOFields
+                  pageTitle={formData.page_title}
+                  pageDescription={formData.page_description}
+                  metaTitle={formData.meta_title}
+                  metaDescription={formData.meta_description}
+                  pageTitleAr={formData.page_title_ar}
+                  pageDescriptionAr={formData.page_description_ar}
+                  metaTitleAr={formData.meta_title_ar}
+                  metaDescriptionAr={formData.meta_description_ar}
+                  ogTitle={formData.og_title}
+                  ogDescription={formData.og_description}
+                  ogTitleAr={formData.og_title_ar}
+                  ogDescriptionAr={formData.og_description_ar}
+                  ogImage={formData.og_image}
+                  onChange={(field, value) => setFormData({ ...formData, [field]: value })}
+                  showOgFields={true}
+                />
 
                 <div className={styles.modalActions}>
                   <button type="submit" className="btn btn-primary">

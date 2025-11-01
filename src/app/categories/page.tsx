@@ -6,6 +6,7 @@ import LoadingSpinner from '@/presentation/components/LoadingSpinner/LoadingSpin
 import Pagination from '@/presentation/components/Pagination/Pagination';
 import BulkActionsToolbar from '@/presentation/components/BulkActionsToolbar/BulkActionsToolbar';
 import IconPicker from '@/presentation/components/IconPicker/IconPicker';
+import SEOFields from '@/presentation/components/SEOFields/SEOFields';
 import { useBulkSelection } from '@/application/hooks/useBulkSelection';
 import { categoryAdminRepository } from '@/infrastructure/repositories/CategoryAdminRepository';
 import { Category } from '@/domain/entities/Category';
@@ -34,6 +35,15 @@ export default function CategoriesPage() {
     description_ar: '',
     icon: '',
     display_order: 0,
+    page_title: '',
+    page_description: '',
+    meta_title: '',
+    meta_description: '',
+    page_title_ar: '',
+    page_description_ar: '',
+    meta_title_ar: '',
+    meta_description_ar: '',
+    og_image: '',
   });
 
   const bulkSelection = useBulkSelection({
@@ -88,6 +98,15 @@ export default function CategoriesPage() {
       description_ar: '',
       icon: '',
       display_order: 0,
+      page_title: '',
+      page_description: '',
+      meta_title: '',
+      meta_description: '',
+      page_title_ar: '',
+      page_description_ar: '',
+      meta_title_ar: '',
+      meta_description_ar: '',
+      og_image: '',
     });
     setShowModal(true);
   };
@@ -101,6 +120,15 @@ export default function CategoriesPage() {
       description_ar: category.description_ar || '',
       icon: category.icon || category.icon_url || '',
       display_order: category.display_order,
+      page_title: category.page_title || '',
+      page_description: category.page_description || '',
+      meta_title: category.meta_title || '',
+      meta_description: category.meta_description || '',
+      page_title_ar: category.page_title_ar || '',
+      page_description_ar: category.page_description_ar || '',
+      meta_title_ar: category.meta_title_ar || '',
+      meta_description_ar: category.meta_description_ar || '',
+      og_image: category.og_image || '',
     });
     setShowModal(true);
   };
@@ -425,6 +453,20 @@ export default function CategoriesPage() {
                     }
                   />
                 </div>
+
+                <SEOFields
+                  pageTitle={formData.page_title}
+                  pageDescription={formData.page_description}
+                  metaTitle={formData.meta_title}
+                  metaDescription={formData.meta_description}
+                  pageTitleAr={formData.page_title_ar}
+                  pageDescriptionAr={formData.page_description_ar}
+                  metaTitleAr={formData.meta_title_ar}
+                  metaDescriptionAr={formData.meta_description_ar}
+                  ogImage={formData.og_image}
+                  onChange={(field, value) => setFormData({ ...formData, [field]: value })}
+                  showOgFields={false}
+                />
 
                 <div className={styles.modalActions}>
                   <button type="submit" className="btn btn-primary">
