@@ -101,3 +101,72 @@
   justify-content: flex-end;
   margin-top: 24px;
 }
+
+// Badge assignment styles
+.badgeList {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.badgeItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  input[type="checkbox"] {
+    margin-right: 12px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.badgeInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.badgeName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.badgeNameAr {
+  font-size: 12px;
+  color: #666;
+}
+
+.badgePreview {
+  width: 40px;
+  height: auto;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.badgeCount {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}

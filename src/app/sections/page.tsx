@@ -10,10 +10,12 @@ import { sectionAdminRepository } from '@/infrastructure/repositories/SectionAdm
 import { categoryAdminRepository } from '@/infrastructure/repositories/CategoryAdminRepository';
 import { tagAdminRepository } from '@/infrastructure/repositories/TagAdminRepository';
 import { filterAdminRepository } from '@/infrastructure/repositories/FilterAdminRepository';
+import { badgeAdminRepository } from '@/infrastructure/repositories/BadgeAdminRepository';
 import { Section } from '@/domain/entities/Section';
 import { Category } from '@/domain/entities/Category';
 import { Tag } from '@/domain/entities/Tag';
 import { Filter } from '@/domain/entities/Filter';
+import { Badge } from '@/domain/entities/Badge';
 import { toastService } from '@/application/services/toastService';
 import styles from './sections.module.scss';
 
@@ -49,6 +51,13 @@ export default function SectionsPage() {
   const [availableFilters, setAvailableFilters] = useState<Filter[]>([]);
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<Record<number, number>>({});
 
+  // Badge assignment state
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+  const [selectedBadgeIds, setSelectedBadgeIds] = useState<number[]>([]);
+  const [originalBadgeIds, setOriginalBadgeIds] = useState<number[]>([]);
+
   const bulkSelection = useBulkSelection({
     items: sections,
     getItemId: (section) => section.id,
@@ -76,6 +85,7 @@ export default function SectionsPage() {
     loadCategories();
     loadTags();
     loadFilters();
+    loadBadges();
   }, []);
 
   const loadCategories = async () => {
@@ -102,6 +112,48 @@ export default function SectionsPage() {
       setAvailableFilters(response.data || []);
     } catch (err) {
       console.error('Failed to load filters:', err);
+    }
+  };
+
+  const loadBadges = async () => {
+    try {
+      const response = await badgeAdminRepository.getAll();
+      setBadges(response.data || []);
+    } catch (err) {
+      console.error('Failed to load badges:', err);
+    }
+  };
+
+  const handleManageBadges = async (section: Section) => {
+    setSelectedSection(section);
+    setShowBadgeModal(true);
+
+    // Fetch current badge assignments
+    try {
+      const response = await badgeAdminRepository.getSectionBadges(section.id);
+      const badgeIds = response.data?.map((b) => b.id) || [];
+      setSelectedBadgeIds(badgeIds);
+      setOriginalBadgeIds(badgeIds);
+    } catch (err: any) {
+      console.error('Failed to load section badges:', err);
+      setSelectedBadgeIds([]);
+      setOriginalBadgeIds([]);
+    }
+  };
+
+  const handleBadgeAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSection) return;
+
+    try {
+      await badgeAdminRepository.assignBadgesToSection(
+        selectedSection.id,
+        selectedBadgeIds
+      );
+      toastService.success('Section badges updated successfully!');
+      setShowBadgeModal(false);
+    } catch (err: any) {
+      toastService.error(`Failed to update badges: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -396,6 +448,12 @@ export default function SectionsPage() {
                         >
                           Edit
                         </button>
+                        <button
+                          onClick={() => handleManageBadges(section)}
+                          className="btn btn-info btn-sm"
+                        >
+                          Badges
+                        </button>
                         {section.is_active ? (
                           <button
                             onClick={() =>
@@ -644,6 +702,59 @@ export default function SectionsPage() {
                     onClick={() => setShowModal(false)}
                     className="btn btn-secondary"
                   >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showBadgeModal && selectedSection && (
+          <div className={styles.modal} onClick={() => setShowBadgeModal(false)}>
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <h2>Manage Badges for Section</h2>
+              <p style={{ marginBottom: '20px', color: '#666' }}>
+                Section: <strong>{selectedSection.title}</strong>
+              </p>
+              <form onSubmit={handleBadgeAssignment}>
+                <div className="form-group">
+                  <label>Select Badges</label>
+                  <div className={styles.badgeList}>
+                    {badges.map((badge) => (
+                      <label key={badge.id} className={styles.badgeItem}>
+                        <input
+                          type="checkbox"
+                          checked={selectedBadgeIds.includes(badge.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBadgeIds([...selectedBadgeIds, badge.id]);
+                            } else {
+                              setSelectedBadgeIds(selectedBadgeIds.filter((id) => id !== badge.id));
+                            }
+                          }}
+                        />
+                        <div className={styles.badgeInfo}>
+                          <span className={styles.badgeName}>{badge.name}</span>
+                          <span className={styles.badgeNameAr}>{badge.name_ar}</span>
+                          {badge.image_url_en && (
+                            <img
+                              src={badge.image_url_en}
+                              alt={badge.name}
+                              className={styles.badgePreview}
+                            />
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <div className={styles.badgeCount}>
+                    {selectedBadgeIds.length} {selectedBadgeIds.length === 1 ? 'badge' : 'badges'} selected
+                  </div>
+                </div>
+                <div className={styles.modalActions}>
+                  <button type="submit" className="btn btn-primary">Save</button>
+                  <button type="button" onClick={() => setShowBadgeModal(false)} className="btn btn-secondary">
                     Cancel
                   </button>
                 </div>

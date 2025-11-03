@@ -12,9 +12,11 @@ import { useBulkSelection } from '@/application/hooks/useBulkSelection';
 import { businessAdminRepository } from '@/infrastructure/repositories/BusinessAdminRepository';
 import { categoryAdminRepository } from '@/infrastructure/repositories/CategoryAdminRepository';
 import { tagAdminRepository } from '@/infrastructure/repositories/TagAdminRepository';
+import { badgeAdminRepository } from '@/infrastructure/repositories/BadgeAdminRepository';
 import { Business } from '@/domain/entities/Business';
 import { Category } from '@/domain/entities/Category';
 import { Tag } from '@/domain/entities/Tag';
+import { Badge } from '@/domain/entities/Badge';
 import { Filter } from '@/domain/entities/Filter';
 import { toastService } from '@/application/services/toastService';
 import {
@@ -91,6 +93,13 @@ export default function BusinessesPage() {
   const [categoryFilters, setCategoryFilters] = useState<Filter[]>([]);
   const [loadingFilters, setLoadingFilters] = useState(false);
 
+  // Badge assignment state
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [selectedBadgeIds, setSelectedBadgeIds] = useState<number[]>([]);
+  const [originalBadgeIds, setOriginalBadgeIds] = useState<number[]>([]);
+
   const bulkSelection = useBulkSelection({
     items: businesses,
     getItemId: (business) => business.id,
@@ -114,6 +123,7 @@ export default function BusinessesPage() {
   useEffect(() => {
     loadCategories();
     loadTags();
+    loadBadges();
   }, []);
 
   const loadCategories = async () => {
@@ -131,6 +141,50 @@ export default function BusinessesPage() {
       setTags(response.data || []);
     } catch (err) {
       console.error('Failed to load tags:', err);
+    }
+  };
+
+  const loadBadges = async () => {
+    try {
+      const response = await badgeAdminRepository.getAll();
+      setBadges(response.data || []);
+    } catch (err) {
+      console.error('Failed to load badges:', err);
+    }
+  };
+
+  const handleManageBadges = async (business: Business) => {
+    setSelectedBusiness(business);
+    setShowBadgeModal(true);
+
+    // Fetch current badge assignments
+    try {
+      const response = await badgeAdminRepository.getBusinessBadges(business.id);
+      const badgeIds = response.data?.map((b) => b.id) || [];
+      setSelectedBadgeIds(badgeIds);
+      setOriginalBadgeIds(badgeIds);
+    } catch (err: any) {
+      console.error('Failed to load business badges:', err);
+      setSelectedBadgeIds([]);
+      setOriginalBadgeIds([]);
+    }
+  };
+
+  const handleBadgeAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBusiness) return;
+
+    try {
+      // Assign all selected badges
+      await badgeAdminRepository.assignBadgesToBusiness(
+        selectedBusiness.id,
+        selectedBadgeIds
+      );
+
+      toastService.success('Business badges updated successfully!');
+      setShowBadgeModal(false);
+    } catch (err: any) {
+      toastService.error(`Failed to update badges: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -337,18 +391,6 @@ export default function BusinessesPage() {
       async () => {
         try {
           switch (action) {
-            case 'verify':
-              await businessAdminRepository.verify(businessId);
-              break;
-            case 'unverify':
-              await businessAdminRepository.unverify(businessId);
-              break;
-            case 'feature':
-              await businessAdminRepository.feature(businessId);
-              break;
-            case 'unfeature':
-              await businessAdminRepository.unfeature(businessId);
-              break;
             case 'suspend':
               await businessAdminRepository.suspend(businessId);
               break;
@@ -563,44 +605,18 @@ export default function BusinessesPage() {
                           >
                             <FiEdit2 /> Edit
                           </button>
-                          {!business.is_verified && (
-                            <button
-                              onClick={() => handleAction('verify', business.id, business.name)}
-                              className="btn btn-success btn-sm"
-                            >
-                              Verify
-                            </button>
-                          )}
-                          {business.is_verified && (
-                            <button
-                              onClick={() => handleAction('unverify', business.id, business.name)}
-                              className="btn btn-secondary btn-sm"
-                            >
-                              Unverify
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleManageBadges(business)}
+                            className="btn btn-info btn-sm"
+                          >
+                            Badges
+                          </button>
                           {business.status === 'pending' && (
                             <button
                               onClick={() => handleAction('activate', business.id, business.name)}
                               className="btn btn-success btn-sm"
                             >
                               <FiPlay /> Activate
-                            </button>
-                          )}
-                          {!business.is_featured && business.status === 'active' && (
-                            <button
-                              onClick={() => handleAction('feature', business.id, business.name)}
-                              className="btn btn-warning btn-sm"
-                            >
-                              Feature
-                            </button>
-                          )}
-                          {business.is_featured && (
-                            <button
-                              onClick={() => handleAction('unfeature', business.id, business.name)}
-                              className="btn btn-secondary btn-sm"
-                            >
-                              Unfeature
                             </button>
                           )}
                           {business.status === 'active' && (
@@ -926,6 +942,67 @@ export default function BusinessesPage() {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Badge Assignment Modal */}
+        {showBadgeModal && selectedBusiness && (
+          <div className={styles.modal} onClick={() => setShowBadgeModal(false)}>
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <h2>Manage Badges for Business</h2>
+              <p style={{ marginBottom: '20px', color: '#666' }}>
+                Business: <strong>{selectedBusiness.name}</strong>
+              </p>
+              <form onSubmit={handleBadgeAssignment}>
+                <div className="form-group">
+                  <label>Select Badges</label>
+                  <div className={styles.badgeList}>
+                    {badges.map((badge) => (
+                      <label key={badge.id} className={styles.badgeItem}>
+                        <input
+                          type="checkbox"
+                          checked={selectedBadgeIds.includes(badge.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBadgeIds([...selectedBadgeIds, badge.id]);
+                            } else {
+                              setSelectedBadgeIds(selectedBadgeIds.filter((id) => id !== badge.id));
+                            }
+                          }}
+                        />
+                        <div className={styles.badgeInfo}>
+                          <span className={styles.badgeName}>{badge.name}</span>
+                          <span className={styles.badgeNameAr}>{badge.name_ar}</span>
+                          {badge.image_url_en && (
+                            <img
+                              src={badge.image_url_en}
+                              alt={badge.name}
+                              className={styles.badgePreview}
+                            />
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <div className={styles.badgeCount}>
+                    {selectedBadgeIds.length} {selectedBadgeIds.length === 1 ? 'badge' : 'badges'} selected
+                  </div>
+                </div>
+
+                <div className={styles.modalActions}>
+                  <button type="submit" className="btn btn-primary">
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBadgeModal(false)}
                     className="btn btn-secondary"
                   >
                     Cancel
