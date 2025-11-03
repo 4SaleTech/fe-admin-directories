@@ -12,7 +12,6 @@ export interface Badge {
 }
 
 export interface CreateBadgeRequest {
-  slug: string;
   name: string;
   name_ar: string;
   image_url_en: string;
