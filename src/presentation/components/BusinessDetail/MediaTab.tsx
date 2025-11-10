@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { toastService } from '@/application/services/toastService';
 import { adminApiClient } from '@/infrastructure/api/adminApiClient';
 import { s3UploadService } from '@/infrastructure/services/s3UploadService';
+import { businessAdminRepository } from '@/infrastructure/repositories/BusinessAdminRepository';
 import LoadingSpinner from '@/presentation/components/LoadingSpinner/LoadingSpinner';
-import { FiImage, FiPlus, FiTrash2, FiUpload } from 'react-icons/fi';
+import { FiImage, FiPlus, FiTrash2, FiUpload, FiCircle, FiSquare } from 'react-icons/fi';
 import styles from './MediaTab.module.scss';
 
 interface MediaTabProps {
@@ -139,6 +140,51 @@ export default function MediaTab({ businessId }: MediaTabProps) {
     }
   };
 
+  const handleSetAsLogo = async (mediaId: number) => {
+    toastService.confirm(
+      'Set this image as business logo?',
+      async () => {
+        try {
+          await businessAdminRepository.setLogoFromMedia(businessId, mediaId);
+          toastService.success('Logo updated successfully!');
+          // Optionally refresh business data to show updated logo
+        } catch (err: any) {
+          toastService.error(`Failed to set logo: ${err.response?.data?.message || err.message}`);
+        }
+      }
+    );
+  };
+
+  const handleSetAsCover = async (mediaId: number) => {
+    toastService.confirm(
+      'Set this image as business cover?',
+      async () => {
+        try {
+          await businessAdminRepository.setCoverFromMedia(businessId, mediaId);
+          toastService.success('Cover updated successfully!');
+          // Optionally refresh business data to show updated cover
+        } catch (err: any) {
+          toastService.error(`Failed to set cover: ${err.response?.data?.message || err.message}`);
+        }
+      }
+    );
+  };
+
+  const handleSetAsLogoAndCover = async (mediaId: number) => {
+    toastService.confirm(
+      'Set this image as both logo and cover?',
+      async () => {
+        try {
+          await businessAdminRepository.setLogoAndCoverFromMedia(businessId, mediaId, mediaId);
+          toastService.success('Logo and cover updated successfully!');
+          // Optionally refresh business data
+        } catch (err: any) {
+          toastService.error(`Failed to set logo and cover: ${err.response?.data?.message || err.message}`);
+        }
+      }
+    );
+  };
+
   if (isLoading) {
     return <LoadingSpinner text="Loading gallery media..." />;
   }
@@ -191,6 +237,32 @@ export default function MediaTab({ businessId }: MediaTabProps) {
                     </span>
                     <span className="badge badge-secondary">Order: {item.display_order}</span>
                   </div>
+
+                  {item.type === 'image' && (
+                    <div className={styles.imageActions}>
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => handleSetAsLogo(item.id)}
+                        title="Set as Logo"
+                      >
+                        <FiCircle /> Logo
+                      </button>
+                      <button
+                        className="btn btn-info btn-sm"
+                        onClick={() => handleSetAsCover(item.id)}
+                        title="Set as Cover"
+                      >
+                        <FiSquare /> Cover
+                      </button>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handleSetAsLogoAndCover(item.id)}
+                        title="Set as Logo & Cover"
+                      >
+                        <FiImage /> Both
+                      </button>
+                    </div>
+                  )}
 
                   <div className={styles.mediaActions}>
                     <input

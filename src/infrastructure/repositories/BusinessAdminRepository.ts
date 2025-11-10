@@ -139,6 +139,34 @@ export class BusinessAdminRepository {
       `/admin/businesses/${id}/deactivate`
     );
   }
+
+  async setLogoFromMedia(id: number, mediaId: number): Promise<ApiResponse<Business>> {
+    return await adminApiClient.put<ApiResponse<Business>>(
+      `/admin/businesses/${id}/logo`,
+      { media_id: mediaId }
+    );
+  }
+
+  async setCoverFromMedia(id: number, mediaId: number): Promise<ApiResponse<Business>> {
+    return await adminApiClient.put<ApiResponse<Business>>(
+      `/admin/businesses/${id}/cover`,
+      { media_id: mediaId }
+    );
+  }
+
+  async setLogoAndCoverFromMedia(
+    id: number,
+    logoMediaId: number,
+    coverMediaId: number
+  ): Promise<ApiResponse<Business>> {
+    return await adminApiClient.put<ApiResponse<Business>>(
+      `/admin/businesses/${id}/logo-and-cover`,
+      {
+        logo_media_id: logoMediaId,
+        cover_media_id: coverMediaId,
+      }
+    );
+  }
 }
 
 export const businessAdminRepository = new BusinessAdminRepository();
