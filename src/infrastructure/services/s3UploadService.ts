@@ -1,4 +1,5 @@
 import { adminApiClient } from '../api/adminApiClient';
+import type { AxiosProgressEvent } from 'axios';
 
 export interface S3UploadResponse {
   upload_url: string;
@@ -44,7 +45,7 @@ class S3UploadService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          onUploadProgress: (progressEvent) => {
+          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
             if (onProgress && progressEvent.total) {
               const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
               onProgress(progress);
