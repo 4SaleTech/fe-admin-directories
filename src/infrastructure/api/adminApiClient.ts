@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 // Hardcoded API URLs based on environment
 const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') {
-    // Server-side: detect from hostname or use localhost
+    // Server-side: default to production
     return 'https://directories-apis.q84sale.com/api/v2';
   }
 
@@ -25,16 +25,16 @@ const getApiBaseUrl = (): string => {
   }
 };
 
-// Initialize with the correct API URL
-let API_BASE_URL = getApiBaseUrl();
-
 export class AdminApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
 
   constructor() {
+    // Get API URL - will re-evaluate on client side
+    const apiBaseUrl = getApiBaseUrl();
+
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: apiBaseUrl,
       headers: {
         'Content-Type': 'application/json',
       },
