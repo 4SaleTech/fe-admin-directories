@@ -28,6 +28,7 @@ const getApiBaseUrl = (): string => {
 export class AdminApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
+  private clientInitialized: boolean = false;
 
   constructor() {
     // Get API URL - will re-evaluate on client side
@@ -41,9 +42,16 @@ export class AdminApiClient {
       timeout: 30000,
     });
 
-    // Request interceptor to add auth token
+    // Request interceptor to add auth token and reinitialize baseURL on client
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
+        // Reinitialize baseURL on first client-side request
+        if (!this.clientInitialized && typeof window !== 'undefined') {
+          const clientBaseUrl = getApiBaseUrl();
+          this.client.defaults.baseURL = clientBaseUrl;
+          this.clientInitialized = true;
+        }
+
         if (this.token && config.headers) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
