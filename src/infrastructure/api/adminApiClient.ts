@@ -1,6 +1,14 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v2';
+const API_BASE_URL = (() => {
+  if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+    throw new Error(
+      'NEXT_PUBLIC_API_BASE_URL environment variable is required. ' +
+      'Please set it in your environment or .env.local file.'
+    );
+  }
+  return process.env.NEXT_PUBLIC_API_BASE_URL;
+})();
 
 export class AdminApiClient {
   private client: AxiosInstance;
