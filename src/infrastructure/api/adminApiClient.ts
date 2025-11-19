@@ -1,18 +1,31 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = (() => {
-  if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-    throw new Error(
-      'NEXT_PUBLIC_API_BASE_URL environment variable is required. ' +
-      'Please set it in your environment or .env.local file.'
-    );
+// Support runtime configuration from /api/config endpoint
+const getApiBaseUrl = async (): Promise<string> => {
+  if (typeof window === 'undefined') {
+    // Server-side: use environment variable directly
+    return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || '';
   }
-  return process.env.NEXT_PUBLIC_API_BASE_URL;
-})();
+
+  // Client-side: fetch from config endpoint
+  try {
+    const response = await fetch('/api/config');
+    const config = await response.json();
+    return config.apiBaseUrl;
+  } catch (error) {
+    console.error('Failed to fetch runtime config:', error);
+    // Fallback to build-time env var
+    return process.env.NEXT_PUBLIC_API_BASE_URL || '';
+  }
+};
+
+// Initialize with empty string, will be set during client initialization
+let API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 export class AdminApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
+  private initialized: boolean = false;
 
   constructor() {
     this.client = axios.create({
@@ -23,9 +36,23 @@ export class AdminApiClient {
       timeout: 30000,
     });
 
-    // Request interceptor to add auth token
+    // Request interceptor to add auth token and update baseURL if needed
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
+        // Initialize baseURL from runtime config on first request (client-side only)
+        if (!this.initialized && typeof window !== 'undefined') {
+          try {
+            const apiUrl = await getApiBaseUrl();
+            if (apiUrl) {
+              this.client.defaults.baseURL = apiUrl;
+            }
+            this.initialized = true;
+          } catch (error) {
+            console.error('Failed to initialize API base URL:', error);
+            this.initialized = true; // Don't retry on every request
+          }
+        }
+
         if (this.token && config.headers) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
